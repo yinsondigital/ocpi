@@ -14,7 +14,10 @@ from py_ocpi.modules.versions.enums import InterfaceRole, VersionNumber
 def client_url(module_id: ModuleID, object_id: str, base_url: str) -> str:
     if module_id == ModuleID.cdrs:
         return base_url
-    return f'{base_url}/{settings.COUNTRY_CODE}/{settings.PARTY_ID}/{object_id}'
+    suffix = f'{settings.COUNTRY_CODE}/{settings.PARTY_ID}/{object_id}'
+    if base_url.endswith('/'):
+        return f'{base_url}{suffix}'
+    return f'{base_url}/{suffix}'
 
 
 def client_method(module_id: ModuleID) -> str:
