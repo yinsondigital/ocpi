@@ -43,7 +43,7 @@ async def post_credentials(request: Request, credentials: Credentials,
 
     # Retrieve the versions and endpoints from the client
     async with httpx.AsyncClient() as client:
-        authorization_token = f'Token {credentials_client_token}'
+        authorization_token = f'Token {encode_string_base64(credentials_client_token)}'
         response_versions = await client.get(credentials.url,
                                              headers={'authorization': authorization_token})
 
