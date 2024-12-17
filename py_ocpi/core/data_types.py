@@ -127,6 +127,11 @@ class DateTime(str):
     @classmethod
     def validate(cls, v):
         try:
+            if datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%fZ"):
+                return cls(v)
+        except Exception:
+            pass
+        try:
             formatted_date = datetime.fromisoformat(v)
             formatted_date = formatted_date.strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError as e:
