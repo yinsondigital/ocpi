@@ -37,9 +37,10 @@ def pagination_filters(
     offset: int = Query(default=0),
     limit: int = Query(default=50),
 ):
+    max_limit = 50
     return {
         'date_from': date_from,
         'date_to': date_to,
         'offset': offset,
-        'limit': limit,
+        'limit': min(limit, max_limit),
     }
