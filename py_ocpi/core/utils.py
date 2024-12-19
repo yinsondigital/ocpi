@@ -28,9 +28,10 @@ def get_auth_token(request: Request) -> str:
 async def get_list(response: Response, filters: dict, module: ModuleID, role: RoleEnum,
                    version: VersionNumber, crud, *args, **kwargs):
     data_list, total, is_last_page = await crud.list(module, role, filters, *args, version=version, **kwargs)
+    cleaned_filters = {k: v for k, v in filters.items() if v is not None}
 
     link = ''
-    params = dict(**filters)
+    params = dict(**cleaned_filters)
     params['offset'] = filters['offset'] + filters['limit']
     if not is_last_page:
         link = (f'<https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/cpo'
