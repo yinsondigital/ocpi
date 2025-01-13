@@ -128,7 +128,10 @@ class DateTime(str):
     def validate(cls, v):
         try:
             if datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%fZ"):
-                return cls(v)
+                dt = datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%fZ")
+                formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{int(dt.microsecond / 1000):03d}Z"
+                return formatted_date
+                # return cls(v)
         except Exception:
             pass
         try:
