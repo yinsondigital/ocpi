@@ -1,5 +1,6 @@
 import urllib
 import base64
+from datetime import datetime, timezone
 
 from fastapi import Response, Request
 from pydantic import BaseModel
@@ -25,13 +26,30 @@ def get_auth_token(request: Request) -> str:
     return decode_string_base64(token)
 
 
+def to_ocpi_isoformat(dt: datetime) -> str:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
 async def get_list(response: Response, filters: dict, module: ModuleID, role: RoleEnum,
                    version: VersionNumber, crud, *args, **kwargs):
     data_list, total, is_last_page = await crud.list(module, role, filters, *args, version=version, **kwargs)
     cleaned_filters = {k: v for k, v in filters.items() if v is not None}
 
+    params = {}
+    try:
+        for k, v in cleaned_filters.items():
+            if isinstance(v, datetime):
+                params[k] = to_ocpi_isoformat(v)
+            else:
+                params[k] = v
+    except Exception:
+        params = dict(**cleaned_filters)
+
     link = ''
-    params = dict(**cleaned_filters)
     params['offset'] = filters['offset'] + filters['limit']
     if not is_last_page:
         link = (f'<https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/cpo'
