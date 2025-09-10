@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, Response
 
 from py_ocpi.modules.cdrs.v_2_2_1.schemas import Cdr
 from py_ocpi.modules.versions.enums import VersionNumber
-from py_ocpi.core.utils import get_auth_token
+from py_ocpi.core.utils import get_auth_token, construct_routing_headers
 from py_ocpi.core import status
 from py_ocpi.core.schemas import OCPIResponse
 from py_ocpi.core.adapter import Adapter
@@ -21,9 +21,12 @@ router = APIRouter(
 async def get_cdr(request: Request, cdr_id: CiString(36),
                   crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
+
 
     data = await crud.get(ModuleID.cdrs, RoleEnum.emsp, cdr_id, auth_token=auth_token,
-                          version=VersionNumber.v_2_2_1)
+                          version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     return OCPIResponse(
         data=[adapter.cdr_adapter(data, VersionNumber.v_2_2_1).dict()],
         **status.OCPI_1000_GENERIC_SUCESS_CODE,
@@ -34,9 +37,11 @@ async def get_cdr(request: Request, cdr_id: CiString(36),
 async def add_cdr(request: Request, response: Response, cdr: Cdr,
                   crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.create(ModuleID.cdrs, RoleEnum.emsp, cdr.dict(),
-                             auth_token=auth_token, version=VersionNumber.v_2_2_1)
+                             auth_token=auth_token, version=VersionNumber.v_2_2_1,
+                             routing_headers=routing_headers)
 
     cdr_data = adapter.cdr_adapter(data)
     cdr_url = (f'https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/emsp'

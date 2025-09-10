@@ -73,3 +73,34 @@ def encode_string_base64(input: str) -> str:
 def decode_string_base64(input: str) -> str:
     input_bytes = base64.b64decode(bytes(input, 'utf-8'))
     return input_bytes.decode('utf-8')
+
+
+def construct_response_header(request_header):
+    response_header = {
+        "OCPI-from-party-id": settings.PARTY_ID,
+        "OCPI-from-countrycode": settings.COUNTRY_CODE,
+    }
+    request_from_pid = request_header.get('ocpi-from-party-id')
+    request_from_cc = request_header.get('ocpi-from-country-code')
+    if request_from_pid:
+        response_header['OCPI-to-party-id'] = request_from_pid
+    if request_from_cc:
+        response_header['OCPI-to-country-code'] = request_from_cc
+    return response_header
+
+
+def construct_routing_headers(request_header):
+    routing_header = {}
+    request_from_pid = request_header.get('ocpi-from-party-id')
+    request_from_cc = request_header.get('ocpi-from-country-code')
+    request_to_pid = request_header.get('ocpi-to-party-id')
+    request_to_cc = request_header.get('ocpi-to-country-code')
+    if request_from_pid:
+        routing_header['OCPI-from-party-id'] = request_from_pid
+    if request_from_cc:
+        routing_header['OCPI-from-country-code'] = request_from_cc
+    if request_to_pid:
+        routing_header['OCPI-to-party-id'] = request_to_pid
+    if request_to_cc:
+        routing_header['OCPI-to-country-code'] = request_to_cc
+    return routing_header

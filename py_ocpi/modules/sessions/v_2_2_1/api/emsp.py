@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 
 from py_ocpi.modules.sessions.v_2_2_1.schemas import SessionPartialUpdate, Session
 from py_ocpi.modules.versions.enums import VersionNumber
-from py_ocpi.core.utils import get_auth_token, partially_update_attributes
+from py_ocpi.core.utils import get_auth_token, partially_update_attributes, construct_routing_headers
 from py_ocpi.core import status
 from py_ocpi.core.schemas import OCPIResponse
 from py_ocpi.core.adapter import Adapter
@@ -20,9 +20,11 @@ router = APIRouter(
 async def get_session(request: Request, country_code: CiString(2), party_id: CiString(3), session_id: CiString(36),
                       crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.get(ModuleID.sessions, RoleEnum.emsp, session_id, auth_token=auth_token,
-                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1)
+                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     return OCPIResponse(
         data=[adapter.session_adapter(data, VersionNumber.v_2_2_1).dict()],
         **status.OCPI_1000_GENERIC_SUCESS_CODE,
@@ -34,17 +36,21 @@ async def add_or_update_session(request: Request, country_code: CiString(2), par
                                 session_id: CiString(36), session: Session,
                                 crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.get(ModuleID.sessions, RoleEnum.emsp, session_id, auth_token=auth_token,
-                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1)
+                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     if data:
         data = await crud.update(ModuleID.sessions, RoleEnum.emsp, session.dict(), session_id,
                                  auth_token=auth_token, country_code=country_code,
-                                 party_id=party_id, version=VersionNumber.v_2_2_1)
+                                 party_id=party_id, version=VersionNumber.v_2_2_1,
+                                 routing_headers=routing_headers)
     else:
         new_data = await crud.create(ModuleID.sessions, RoleEnum.emsp, session.dict(),
                                      auth_token=auth_token, country_code=country_code,
-                                     party_id=party_id, version=VersionNumber.v_2_2_1)
+                                     party_id=party_id, version=VersionNumber.v_2_2_1,
+                                     routing_headers=routing_headers)
         try:
             if isinstance(new_data.json(), bool):
                 data = session.dict()
@@ -72,9 +78,11 @@ async def partial_update_session(request: Request, country_code: CiString(2), pa
                                  session_id: CiString(36), session: SessionPartialUpdate,
                                  crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     old_data = await crud.get(ModuleID.sessions, RoleEnum.emsp, session_id, auth_token=auth_token,
-                              country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1)
+                              country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1,
+                              routing_headers=routing_headers)
     old_session = adapter.session_adapter(old_data)
 
     new_session = old_session
@@ -82,7 +90,8 @@ async def partial_update_session(request: Request, country_code: CiString(2), pa
 
     data = await crud.update(ModuleID.sessions, RoleEnum.emsp, new_session.dict(), session_id,
                              auth_token=auth_token, country_code=country_code,
-                             party_id=party_id, version=VersionNumber.v_2_2_1)
+                             party_id=party_id, version=VersionNumber.v_2_2_1,
+                             routing_headers=routing_headers)
 
     return OCPIResponse(
         data=[adapter.session_adapter(data).dict()],

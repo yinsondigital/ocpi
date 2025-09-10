@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, WebSocket, Depends
 from py_ocpi.core.adapter import Adapter
 from py_ocpi.core.crud import Crud
 from py_ocpi.core.schemas import Push, PushResponse, ReceiverResponse
-from py_ocpi.core.utils import encode_string_base64, get_auth_token
+from py_ocpi.core.utils import encode_string_base64, get_auth_token, construct_response_header
 from py_ocpi.core.dependencies import get_crud, get_adapter
 from py_ocpi.core.enums import ModuleID, RoleEnum
 from py_ocpi.core.config import settings
@@ -48,6 +48,7 @@ async def send_push_request(
         adapter: Adapter,
         client_auth_token: str,
         endpoints: list,
+        to_routing_header: dict = {},
 ):
     data = request_data(module_id, object_data, adapter)
 
@@ -59,8 +60,12 @@ async def send_push_request(
     # push object to client
     async with httpx.AsyncClient() as client:
         url = client_url(module_id, object_id, base_url)
+        headers = {'authorization': client_auth_token}
+        if to_routing_header:
+            routing_headers = construct_response_header(to_routing_header)
+            headers = {**headers, **routing_headers}
         request = client.build_request(client_method(module_id), url,
-                                       headers={'authorization': client_auth_token}, json=data)
+                                       headers=headers, json=data)
         response = await client.send(request)
         return response
 

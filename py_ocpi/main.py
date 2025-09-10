@@ -16,6 +16,7 @@ from py_ocpi.core.enums import RoleEnum
 from py_ocpi.core.config import settings
 from py_ocpi.core.data_types import URL
 from py_ocpi.core.schemas import OCPIResponse
+from py_ocpi.core.utils import construct_response_header
 from py_ocpi.core.exceptions import AuthorizationOCPIError, NotFoundOCPIError
 from py_ocpi.core.push import http_router as http_push_router, websocket_router as websocket_push_router
 from py_ocpi.routers import v_2_2_1_cpo_router, v_2_2_1_emsp_router
@@ -39,6 +40,9 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                     **status.OCPI_3000_GENERIC_SERVER_ERROR,
                 ).dict()
             )
+        ocpi_headers = construct_response_header(request.headers)
+        for key, value in ocpi_headers.items():
+            response.headers[key] = value
         return response
 
 

@@ -6,7 +6,7 @@ from py_ocpi.core.enums import ModuleID, RoleEnum
 from py_ocpi.core.schemas import OCPIResponse
 from py_ocpi.core.adapter import Adapter
 from py_ocpi.core.crud import Crud
-from py_ocpi.core.utils import get_auth_token, partially_update_attributes
+from py_ocpi.core.utils import get_auth_token, partially_update_attributes, construct_routing_headers
 from py_ocpi.core.dependencies import get_crud, get_adapter
 from py_ocpi.modules.versions.enums import VersionNumber
 from py_ocpi.modules.tokens.v_2_2_1.enums import TokenType
@@ -22,11 +22,13 @@ async def get_token(country_code: CiString(2), party_id: CiString(3), token_uid:
                     request: Request, token_type: TokenType = TokenType.rfid,
                     crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.get(ModuleID.tokens, RoleEnum.cpo, token_uid,
                           auth_token=auth_token, country_code=country_code,
                           party_id=party_id, token_type=token_type,
-                          version=VersionNumber.v_2_2_1)
+                          version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     return OCPIResponse(
         data=[adapter.token_adapter(data).dict()],
         **status.OCPI_1000_GENERIC_SUCESS_CODE,
@@ -38,18 +40,22 @@ async def add_or_update_token(country_code: CiString(2), party_id: CiString(3), 
                               request: Request, token_type: TokenType = TokenType.rfid,
                               crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.get(ModuleID.tokens, RoleEnum.cpo, token_uid, auth_token=auth_token,
                           token_type=token_type, country_code=country_code, party_id=party_id,
-                          version=VersionNumber.v_2_2_1)
+                          version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     if data:
         data = await crud.update(ModuleID.tokens, RoleEnum.cpo, token.dict(), token_uid, token_type=token_type,
                                  auth_token=auth_token, country_code=country_code,
-                                 party_id=party_id, version=VersionNumber.v_2_2_1)
+                                 party_id=party_id, version=VersionNumber.v_2_2_1,
+                                 routing_headers=routing_headers)
     else:
         data = await crud.create(ModuleID.tokens, RoleEnum.cpo, token.dict(), token_type=token_type,
                                  auth_token=auth_token, country_code=country_code,
-                                 party_id=party_id, version=VersionNumber.v_2_2_1)
+                                 party_id=party_id, version=VersionNumber.v_2_2_1,
+                                 routing_headers=routing_headers)
     return OCPIResponse(
         data=[adapter.token_adapter(data).dict()],
         **status.OCPI_1000_GENERIC_SUCESS_CODE,
@@ -61,10 +67,13 @@ async def partial_update_token(country_code: CiString(2), party_id: CiString(3),
                                token: TokenPartialUpdate, request: Request, token_type: TokenType = TokenType.rfid,
                                crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
+
 
     old_data = await crud.get(ModuleID.tokens, RoleEnum.cpo, token_uid, token_type=token_type,
                               auth_token=auth_token, country_code=country_code, party_id=party_id,
-                              version=VersionNumber.v_2_2_1)
+                              version=VersionNumber.v_2_2_1,
+                              routing_headers=routing_headers)
     old_token = adapter.token_adapter(old_data)
 
     new_token = old_token
@@ -72,7 +81,8 @@ async def partial_update_token(country_code: CiString(2), party_id: CiString(3),
 
     data = await crud.update(ModuleID.tokens, RoleEnum.cpo, new_token.dict(), token_uid, token_type=token_type,
                              auth_token=auth_token, country_code=country_code,
-                             party_id=party_id, version=VersionNumber.v_2_2_1)
+                             party_id=party_id, version=VersionNumber.v_2_2_1,
+                             routing_headers=routing_headers)
     return OCPIResponse(
         data=[adapter.token_adapter(data).dict()],
         **status.OCPI_1000_GENERIC_SUCESS_CODE,

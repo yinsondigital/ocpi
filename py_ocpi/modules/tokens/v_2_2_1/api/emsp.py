@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Response, Request, status as http_status
 from py_ocpi.modules.tokens.v_2_2_1.enums import TokenType
 from py_ocpi.modules.tokens.v_2_2_1.schemas import LocationReference, AuthorizationInfo
 from py_ocpi.modules.versions.enums import VersionNumber
-from py_ocpi.core.utils import get_list, get_auth_token
+from py_ocpi.core.utils import get_list, get_auth_token, construct_routing_headers
 from py_ocpi.core import status
 from py_ocpi.core.schemas import OCPIResponse
 from py_ocpi.core.adapter import Adapter
@@ -25,9 +25,11 @@ async def get_tokens(request: Request,
                      adapter: Adapter = Depends(get_adapter),
                      filters: dict = Depends(pagination_filters)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data_list = await get_list(response, filters, ModuleID.tokens, RoleEnum.emsp,
-                               VersionNumber.v_2_2_1, crud, auth_token=auth_token)
+                               VersionNumber.v_2_2_1, crud, auth_token=auth_token,
+                               routing_headers=routing_headers)
 
     tokens = []
     for data in data_list:
@@ -45,11 +47,14 @@ async def authorize_token(request: Request, response: Response,
                           location_reference: LocationReference = None,
                           crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
+
     try:
         # check if token exists
         await crud.get(ModuleID.tokens, RoleEnum.emsp, token_uid,
                        auth_token=auth_token, token_type=token_type,
-                       version=VersionNumber.v_2_2_1)
+                       version=VersionNumber.v_2_2_1,
+                       routing_headers=routing_headers)
 
         location_reference = location_reference.dict() if location_reference else None
         data = {
@@ -58,7 +63,8 @@ async def authorize_token(request: Request, response: Response,
             'location_reference': location_reference
         }
         authroization_result = await crud.do(ModuleID.tokens, RoleEnum.emsp, Action.authorize_token, data=data,
-                                             auth_token=auth_token)
+                                             auth_token=auth_token,
+                                             routing_headers=routing_headers)
 
         # when the token information is not enough
         if not authroization_result:

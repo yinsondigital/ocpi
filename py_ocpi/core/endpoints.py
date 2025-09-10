@@ -57,6 +57,13 @@ ENDPOINTS = {
                 url=URL(f'https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/cpo'
                         f'/{VersionNumber.v_2_2_1.value}/{ModuleID.tokens.value}/')
             ),
+            # hub_client_info
+            Endpoint(
+                identifier=ModuleID.hub_client_info,
+                role=InterfaceRole.receiver,
+                url=URL(f'https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/cpo'
+                        f'/{VersionNumber.v_2_2_1.value}/{ModuleID.hub_client_info.value}/')
+            ),
         ],
 
         # ###############--EMSP--###############
@@ -109,6 +116,13 @@ ENDPOINTS = {
                 role=InterfaceRole.sender,
                 url=URL(f'https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/emsp'
                         f'/{VersionNumber.v_2_2_1.value}/{ModuleID.tokens.value}/')
+            ),
+            # hub_client_info
+            Endpoint(
+                identifier=ModuleID.hub_client_info,
+                role=InterfaceRole.receiver,
+                url=URL(f'https://{settings.OCPI_HOST}/{settings.OCPI_PREFIX}/emsp'
+                        f'/{VersionNumber.v_2_2_1.value}/{ModuleID.hub_client_info.value}/')
             ),
         ]
     }

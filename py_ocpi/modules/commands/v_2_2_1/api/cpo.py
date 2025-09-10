@@ -13,7 +13,7 @@ from py_ocpi.core.schemas import OCPIResponse
 from py_ocpi.core.adapter import Adapter
 from py_ocpi.core.crud import Crud
 from py_ocpi.core import status
-from py_ocpi.core.utils import encode_string_base64, get_auth_token
+from py_ocpi.core.utils import encode_string_base64, get_auth_token, construct_routing_headers
 from py_ocpi.modules.versions.enums import VersionNumber
 from py_ocpi.modules.commands.v_2_2_1.enums import CommandType
 from py_ocpi.modules.commands.v_2_2_1.schemas import (
@@ -41,15 +41,17 @@ async def apply_pydantic_schema(command: str, data: dict):
     return data
 
 
-async def send_command_result(command_data: dict, command: CommandType, auth_token: str, crud: Crud, adapter: Adapter):
+async def send_command_result(command_data: dict, command: CommandType, auth_token: str, crud: Crud, adapter: Adapter,
+                              routing_headers: dict):
     client_auth_token = await crud.do(ModuleID.commands, RoleEnum.cpo, Action.get_client_token,
-                                      auth_token=auth_token, version=VersionNumber.v_2_2_1)
+                                      auth_token=auth_token, version=VersionNumber.v_2_2_1, 
+                                      routing_headers=routing_headers)
 
     for _ in range(150):  # check for 5 mins
         # since command has no id, 0 is used for id parameter of crud.get
         command_result = await crud.get(ModuleID.commands, RoleEnum.cpo, 0,
                                         auth_token=auth_token, version=VersionNumber.v_2_2_1, command=command,
-                                        command_data=command_data)
+                                        command_data=command_data, routing_headers=routing_headers)
         if command_result:
             break
         await sleep(2)
@@ -69,6 +71,7 @@ async def send_command_result(command_data: dict, command: CommandType, auth_tok
 async def receive_command(request: Request, command: CommandType, data: dict, background_tasks: BackgroundTasks,
                           crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     try:
         command_data = await apply_pydantic_schema(command, data)
@@ -81,14 +84,17 @@ async def receive_command(request: Request, command: CommandType, data: dict, ba
     try:
         if hasattr(command_data, 'location_id'):
             await crud.get(ModuleID.locations, RoleEnum.cpo, command_data.location_id, auth_token=auth_token,
-                           version=VersionNumber.v_2_2_1)
+                           version=VersionNumber.v_2_2_1,
+                           routing_headers=routing_headers)
 
         command_response = await crud.do(ModuleID.commands, RoleEnum.cpo, Action.send_command, command_data.dict(),
-                                         command=command, auth_token=auth_token, version=VersionNumber.v_2_2_1)
+                                         command=command, auth_token=auth_token, version=VersionNumber.v_2_2_1,
+                                         routing_headers=routing_headers)
 
         if command_response['result'] == CommandResponseType.accepted:
             background_tasks.add_task(send_command_result, command_data=command_data,
-                                      command=command, auth_token=auth_token, crud=crud, adapter=adapter)
+                                      command=command, auth_token=auth_token, crud=crud, adapter=adapter,
+                                      routing_headers=routing_headers)
 
         return OCPIResponse(
             data=adapter.command_response_adapter(command_response).dict(),

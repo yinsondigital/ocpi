@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 
 from py_ocpi.modules.tariffs.v_2_2_1.schemas import Tariff
 from py_ocpi.modules.versions.enums import VersionNumber
-from py_ocpi.core.utils import get_auth_token
+from py_ocpi.core.utils import get_auth_token, construct_routing_headers
 from py_ocpi.core import status
 from py_ocpi.core.schemas import OCPIResponse
 from py_ocpi.core.adapter import Adapter
@@ -20,9 +20,11 @@ router = APIRouter(
 async def get_tariff(request: Request, country_code: CiString(2), party_id: CiString(3), tariff_id: CiString(36),
                      crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.get(ModuleID.tariffs, RoleEnum.emsp, tariff_id, auth_token=auth_token,
-                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1)
+                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     return OCPIResponse(
         data=[adapter.tariff_adapter(data, VersionNumber.v_2_2_1).dict()],
         **status.OCPI_1000_GENERIC_SUCESS_CODE,
@@ -34,17 +36,21 @@ async def add_or_update_tariff(request: Request, country_code: CiString(2), part
                                tariff_id: CiString(36), tariff: Tariff,
                                crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     data = await crud.get(ModuleID.tariffs, RoleEnum.emsp, tariff_id, auth_token=auth_token,
-                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1)
+                          country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1,
+                          routing_headers=routing_headers)
     if data:
         data = await crud.update(ModuleID.tariffs, RoleEnum.emsp, tariff.dict(), tariff_id,
                                  auth_token=auth_token, country_code=country_code,
-                                 party_id=party_id, version=VersionNumber.v_2_2_1)
+                                 party_id=party_id, version=VersionNumber.v_2_2_1,
+                                 routing_headers=routing_headers)
     else:
         data = await crud.create(ModuleID.tariffs, RoleEnum.emsp, tariff.dict(),
                                  auth_token=auth_token, country_code=country_code,
-                                 party_id=party_id, version=VersionNumber.v_2_2_1)
+                                 party_id=party_id, version=VersionNumber.v_2_2_1,
+                                 routing_headers=routing_headers)
 
     return OCPIResponse(
         data=[adapter.tariff_adapter(data).dict()],
@@ -56,10 +62,12 @@ async def add_or_update_tariff(request: Request, country_code: CiString(2), part
 async def delete_tariff(request: Request, country_code: CiString(2), party_id: CiString(3), tariff_id: CiString(36),
                         crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
+    routing_headers = construct_routing_headers(request.headers)
 
     await crud.delete(ModuleID.tariffs, RoleEnum.emsp, tariff_id,
                       auth_token=auth_token, country_code=country_code,
-                      party_id=party_id, version=VersionNumber.v_2_2_1)
+                      party_id=party_id, version=VersionNumber.v_2_2_1,
+                      routing_headers=routing_headers)
 
     return OCPIResponse(
         data=[],
