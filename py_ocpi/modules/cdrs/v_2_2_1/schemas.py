@@ -16,7 +16,7 @@ class SignedValue(BaseModel):
     """
     nature: CiString(32)
     plain_data: String(512)
-    singed_data: String(5000)
+    signed_data: String(5000)
 
 
 class SignedData(BaseModel):

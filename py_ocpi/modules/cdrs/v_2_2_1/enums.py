@@ -48,6 +48,6 @@ class CdrDimensionType(str, Enum):
     # defined in hours, default step_size multiplier is 1 second.
     reservation_time = 'RESERVATION_TIME'
     # Current state of charge of the EV, in percentage, values allowed: 0 to 100. See note below.
-    state_of_change = 'STATE_OF_CHARGE'
+    state_of_charge = 'STATE_OF_CHARGE'
     # Time charging during this ChargingPeriod: defined in hours, default step_size multiplier is 1 second.
     time = 'TIME'

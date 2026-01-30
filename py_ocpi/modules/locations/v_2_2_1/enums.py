@@ -10,7 +10,7 @@ class ParkingRestriction(str, Enum):
     # Parking is only allowed while plugged in (charging).
     plugged = 'PLUGGED'
     # Reserved parking spot for disabled people with valid ID.
-    disables = 'DISABLED'
+    disabled = 'DISABLED'
     # Parking spot for customers/guests only, for example in case of a hotel or shop.
     customers = 'CUSTOMERS'
     # Parking spot only suitable for (electric) motorcycles or scooters.
@@ -64,7 +64,7 @@ class Facility(str, Enum):
     # A taxi stand.
     taxi_stand = 'TAXI_STAND'
     # A tram stop/station.
-    tram_shop = 'TRAM_STOP'
+    tram_stop = 'TRAM_STOP'
     # A metro station.
     metro_station = 'METRO_STATION'
     # A train station.
@@ -137,7 +137,7 @@ class Capability(str, Enum):
     # (handy when a card and key-fob are given to the EV-driver).
     token_group_capable = 'TOKEN_GROUP_CAPABLE'  # nosec
     # Connectors have mechanical lock that can be requested by the eMSP to be unlocked.
-    unlook_capable = 'UNLOCK_CAPABLE'
+    unlock_capable = 'UNLOCK_CAPABLE'
 
 
 class ConnectorType(str, Enum):
