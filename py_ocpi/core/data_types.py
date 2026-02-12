@@ -75,7 +75,28 @@ class CiStringBase(str):
 
     def __repr__(self):
         return f'CiString({super().__repr__()})'
+    
+class CiStringPreserveCaseBase(str):
+    """Case Insensitive String that preserves original case"""
+    max_length: int
 
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v, field: ModelField):
+        if not isinstance(v, str):
+            raise TypeError(f'excpected string but received {type(v)}')
+        if not v.isascii():
+            raise ValueError('invalid cistring format')
+        if len(v) > cls.max_length:
+            raise ValueError(f'{field.name} length must be lower or equal to {cls.max_length}')
+        return cls(v)  # No .lower()
+
+class CiStringPreserveCase:
+    def __new__(cls, max_length: int = 255):
+        return type('CiStringPreserveCase', (CiStringPreserveCaseBase,), {'max_length': max_length})
 
 class CiString:
     def __new__(cls, max_length: int = 255) -> Type[str]:
