@@ -6,7 +6,7 @@ from py_ocpi.modules.locations.v_2_2_1.enums import (
     EnergySourceCategory, ParkingType, ParkingRestriction, Facility, Status, Capability,
     ConnectorFormat, ConnectorType, PowerType, ImageCategory, EnvironmentalImpactCategory
 )
-from py_ocpi.core.data_types import URL, CiString, DisplayText, Number, String, DateTime
+from py_ocpi.core.data_types import URL, CiString, DisplayText, Number, String, DateTime, CiStringPreserveCase
 
 
 class PublishTokenType(BaseModel):
@@ -90,7 +90,7 @@ class EVSE(BaseModel):
     https://github.com/ocpi/ocpi/blob/2.2.1/mod_locations.asciidoc#mod_locations_evse_object
     """
     uid: CiString(max_length=36)
-    evse_id: Optional[CiString(max_length=48)]
+    evse_id: Optional[CiStringPreserveCase(max_length=48)]
     status: Status
     status_schedule: Optional[StatusSchedule]
     capabilities: List[Capability] = []
@@ -106,7 +106,7 @@ class EVSE(BaseModel):
 
 class EVSEPartialUpdate(BaseModel):
     uid: Optional[CiString(max_length=36)]
-    evse_id: Optional[CiString(max_length=48)]
+    evse_id: Optional[CiStringPreserveCase(max_length=48)]
     status: Optional[Status]
     status_schedule: Optional[StatusSchedule]
     capabilities: Optional[List[Capability]]
