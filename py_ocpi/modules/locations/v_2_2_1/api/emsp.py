@@ -73,7 +73,7 @@ async def add_or_update_location(request: Request, country_code: CiString(2), pa
                                  location_id: CiString(36), location: Location,
                                  crud: Crud = Depends(get_crud), adapter: Adapter = Depends(get_adapter)):
     auth_token = get_auth_token(request)
-
+    print('receiving location data')
     data = await crud.get(ModuleID.locations, RoleEnum.emsp, location_id, auth_token=auth_token,
                           country_code=country_code, party_id=party_id, version=VersionNumber.v_2_2_1)
     if data:
