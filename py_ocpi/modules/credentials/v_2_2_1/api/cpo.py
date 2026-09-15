@@ -130,6 +130,7 @@ async def update_credentials(request: Request, credentials: Credentials,
                                                         "credentials": credentials.dict(),
                                                         "endpoints": endpoints
                                                     },
+                                                    auth_token,
                                                     auth_token=auth_token,
                                                     version=VersionNumber.v_2_2_1)
 
